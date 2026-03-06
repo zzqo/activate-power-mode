@@ -1,50 +1,31 @@
-activate-power-mode
-====
+# Activate Power Mode for IDEA
 
-activate-power-mode for IDEA
--------
+<!-- Plugin description -->
+在 IDEA 中使用 activate-power-mode 插件，让你的代码输入更加炫酷！根据 Atom 的插件 activate-power-mode 的效果移植到 IDEA 上。支持粒子效果、屏幕震动、Combo 显示等特效，可自定义配置粒子颜色、开关控制等参数。
+<!-- Plugin description end -->
 
-![PREVIEW](https://github.com/ViceFantasyPlace/activate-power-mode/blob/master/ActivatePowerModePreview.gif?raw=true) 
-![PREVIEW_2](https://github.com/ViceFantasyPlace/activate-power-mode/blob/master/ActivatePowerModePreview-2.gif?raw=true) 
+## 功能特性
 
+- 根据 Atom 的插件 activate-power-mode 的效果移植到 IDEA 上
+- 支持粒子效果、屏幕震动、Combo 显示等特效
+- 可自定义配置粒子颜色、开关控制等参数
 
-Features.
--------
- - 粒子的颜色根据文本字体的颜色
- - 把Combo, MaxCombo 可视化出来
- - 做设置数据持久化
- - 增加设置参数界面
- 
+## 快捷键
 
-使用
--------
-#### 安装 activate-power-mode 之后 到 Window > activate-power-mode 就可以开启或者关闭相对应的效果
+- **启用/禁用**: `Ctrl + Alt + Shift + A`
+- **震动效果开关**: `Ctrl + Alt + Shift + S`
+- **粒子效果开关**: `Ctrl + Alt + Shift + P`
 
+## 安装
 
+通过 IntelliJ IDEA 的插件市场搜索 "activate-power-mode" 进行安装，或从 [GitHub Releases](https://github.com/ViceFantasyPlace/activate-power-mode) 下载后手动安装。
 
-安装
--------
+## 使用说明
 
-#### 下载jar包
-[在Jetbrains plugin repositories上下载](https://plugins.jetbrains.com/plugin/8330?pr=idea)
+1. 安装完成后重启 IDEA
+2. 通过菜单栏 `Window` -> `activate-power-mode` 访问相关功能
+3. 使用快捷键快速控制各项功能开关
 
-[直接在release下载](https://github.com/ViceFantasyPlace/activate-power-mode/releases)
+## 版本信息
 
-#### 安装 Plugin jar包
->Preferences/Plugins <br>
->-> Install plugin from disk <br>
->-> 选择 jar文件 <br>
->-> Apply <br>
->-> 重启编辑器 <br>
-
-开发
--------
-
-#### 下载
->git clone https://github.com/ViceFantasyPlace/activate-power-mode.git
-
-#### 第一次运行如果没有运行配置需要创建一个Plugin的Configuration
->Edit Run/Debug Configurations <br>
->-> add a new Plugin Configuration <br>
->-> 在 Use classpath of module 选择 activate-power-mode <br>
->-> Apply <br>
+详细版本变更历史请查看 [CHANGELOG.md](CHANGELOG.md)

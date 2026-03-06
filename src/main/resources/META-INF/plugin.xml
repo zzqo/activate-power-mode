@@ -1,0 +1,55 @@
+<idea-plugin>
+    <id>com.jiyuanime.ActivatePowerModeApplicationPlugin</id>
+    <name>Activate Power Mode</name>
+    <vendor email="" url="https://github.com/ViceFantasyPlace/activate-power-mode">ViceFantasyPlace</vendor>
+
+    <!-- please see http://www.jetbrains.org/intellij/sdk/docs/basics/getting_started/plugin_compatibility.html
+         on how to target different products -->
+    <depends>com.intellij.modules.lang</depends>
+
+    <resource-bundle>messages.ActivatePowerModeBundle</resource-bundle>
+
+    <extensions defaultExtensionNs="com.intellij">
+        <applicationService serviceInterface="com.jiyuanime.config.Config"
+                            serviceImplementation="com.jiyuanime.config.Config"/>
+        <applicationConfigurable instance="com.jiyuanime.ui.Setting"/>
+
+        <postStartupActivity implementation="com.jiyuanime.ActivatePowerModeApplicationPlugin"/>
+    </extensions>
+
+    <actions>
+        <!-- Add your actions here -->
+        <group id="ActivatePowerModeGroup" popup="true"
+               text="Activate Power Mode">
+            <add-to-group group-id="WindowMenu" anchor="first"/>
+
+            <action id="ActivatePowerEnable" class="com.jiyuanime.action.ActivatePowerEnableAction"
+                    text="enable"
+                    description="enable">
+                <keyboard-shortcut keymap="$default" first-keystroke="shift ctrl alt A"/>
+            </action>
+
+            <action id="ShakeSwitch" class="com.jiyuanime.action.ShakeSwitchAction"
+                    text="shake"
+                    description="shake">
+                <keyboard-shortcut keymap="$default" first-keystroke="shift ctrl alt S"/>
+            </action>
+
+            <action id="ParticleSwitch" class="com.jiyuanime.action.ParticleSwitchAction"
+                    text="particle"
+                    description="particle">
+                <keyboard-shortcut keymap="$default" first-keystroke="shift ctrl alt P"/>
+            </action>
+
+            <action id="ComboSwitchAction" class="com.jiyuanime.action.ComboSwitchAction"
+                    text="combo"
+                    description="combo"/>
+
+            <action id="ColorfulSwitch" class="com.jiyuanime.action.ColorfulSwitchAction"
+                    text="colorful"
+                    description="colorful"/>
+        </group>
+
+    </actions>
+
+</idea-plugin>
