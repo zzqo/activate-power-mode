@@ -183,4 +183,9 @@ public class SettingForm {
 
     }
 
+    public void reset() {
+        Config.getInstance().defaultInitState();
+        initSetting();
+    }
+
 }

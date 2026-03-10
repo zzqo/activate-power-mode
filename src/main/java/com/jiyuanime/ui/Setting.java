@@ -39,7 +39,7 @@ public class Setting implements Configurable {
 
     @Override
     public void reset() {
-        form.initSetting();
+        form.reset();
     }
 
     @Override
