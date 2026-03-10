@@ -1,11 +1,26 @@
 <!-- Keep a Changelog guide -> https://keepachangelog.com -->
 
-# Activate Power Mode Changelog
+# Activate Power Mode Pro Changelog
 
-## [0.1.9] - 2026-03-06
+## [0.1.9] - 2026-03-10
 
-- 替换废弃的api
+- 更新api
+- 添加国际化功能
 - 修复action功能开关失效的问题
+- 性能优化与已知问题修复
+- 计数器现在可以修改字体
+- 可配置的粒子大小
+- 添加清空计数器的功能
+- 可配置粒子动画时间
+
+- Update API
+- Add internationalization function
+- Fix the issue of action function switch failure
+- Performance optimization and fixes for known issues
+- Configurable combo font
+- Configurable particle size
+- Feature: Clear combo
+- Configurable particle animation time
 
 ## [0.1.8]
 

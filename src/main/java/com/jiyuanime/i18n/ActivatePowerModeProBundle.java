@@ -7,14 +7,14 @@ import org.jetbrains.annotations.PropertyKey;
 
 import java.util.function.Supplier;
 
-public class ActivatePowerModeBundle extends DynamicBundle {
+public class ActivatePowerModeProBundle extends DynamicBundle {
 
     @NonNls
-    private static final String BUNDLE = "messages.ActivatePowerModeBundle";
+    private static final String BUNDLE = "messages.ActivatePowerModeProBundle";
 
-    private static final ActivatePowerModeBundle INSTANCE = new ActivatePowerModeBundle();
+    private static final ActivatePowerModeProBundle INSTANCE = new ActivatePowerModeProBundle();
 
-    private ActivatePowerModeBundle() {
+    private ActivatePowerModeProBundle() {
         super(BUNDLE);
     }
 

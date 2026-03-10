@@ -22,7 +22,7 @@ public class ShakeManager {
 
     private boolean isShaking = false;
     private boolean isEnable = false;
-    private java.util.Timer mTimer = new Timer();
+    private Timer mTimer = new Timer();
     private JComponent mNowEditorJComponent;
 
     public static ShakeManager getInstance() {
@@ -82,7 +82,7 @@ public class ShakeManager {
                 }, 1);
             }
         } else {
-            log.error("还没初始化 ShakeManager");
+            log.warn("还没初始化 ShakeManager");
         }
 
     }
@@ -90,7 +90,7 @@ public class ShakeManager {
     /**
      * changing the layout location of the JComponent
      */
-    private class ChangingLocationOfComponent implements Runnable {
+    private static class ChangingLocationOfComponent implements Runnable {
         private final JComponent target;
         private final Pair<Integer, Integer> location;
 
@@ -116,7 +116,7 @@ public class ShakeManager {
         return isShaking;
     }
 
-    public JComponent getNowEditorJComponent() {
+    public JComponent getNowEditorComponent() {
         return mNowEditorJComponent;
     }
 

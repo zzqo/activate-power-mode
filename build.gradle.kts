@@ -136,6 +136,41 @@ tasks {
         dependsOn(patchChangelog)
     }
 
+    // 添加jvm启动参数
+//    withType<JavaExec> {
+//        jvmArgs("-Duser.language=zh", "-Duser.country=CN")
+//    }
+
+//    生成界面搜索索引
+//    buildSearchableOptions {
+//        enabled = false
+//    }
+}
+
+// 2. 创建一个新的 Zip 任务 ，执行 gradlew clean distributePlugin 命令打包插件为zip
+tasks.register<Zip>("distributePlugin") {
+    // 设置 ZIP 包的名字，例如: my-plugin-1.0.0-distribution.zip
+    archiveBaseName.set("${project.name}-distribution")
+    archiveVersion.set(project.version.toString())
+    archiveExtension.set("zip")
+
+    // 依赖关系：确保在打包前已经构建好了插件 JAR 和依赖
+    dependsOn(tasks.buildPlugin)
+
+    // 获取运行时依赖
+    val runtimeClasspath = configurations.runtimeClasspath.get()
+
+    // 3. 打包逻辑
+    into("/") { // 根目录
+        // 3.1 将主插件 JAR 放入根目录
+        // tasks.buildPlugin.archiveFile 指向生成的主 JAR
+        from(tasks.buildPlugin.get().archiveFile)
+    }
+
+    into("lib/") { // lib 目录，存放第三方依赖
+        // 3.2 将所有运行时依赖复制到 lib/ 目录下
+        from(runtimeClasspath.files)
+    }
 }
 
 intellijPlatformTesting {

@@ -1,8 +1,17 @@
-# Activate Power Mode for IDEA
+# Activate Power Mode Pro for IDEA
 
 <!-- Plugin description -->
-在 IDEA 中使用 activate-power-mode 插件，让你的代码输入更加炫酷！根据 Atom 的插件 activate-power-mode 的效果移植到 IDEA 上。支持粒子效果、屏幕震动、Combo 显示等特效，可自定义配置粒子颜色、开关控制等参数。
+
+### activate-power-mode for Jetbrains IDEs.
+
+- 在 IDEA 中使用 activate-power-mode 插件，让你的代码输入更加炫酷！根据 Atom 的插件 activate-power-mode 的效果移植到 IDEA 上。支持粒子效果、屏幕震动、Combo 显示等特效，可自定义配置粒子颜色、开关控制等参数。
+
 <!-- Plugin description end -->
+
+本项目参考了以下项目：
+
+- [ViceFantasyPlace](https://github.com/ViceFantasyPlace/activate-power-mode), 感谢原作者的付出
+- [SinarPandora](https://github.com/SinarPandora/activate-power-mode), 感谢作者的付出
 
 ## 功能特性
 

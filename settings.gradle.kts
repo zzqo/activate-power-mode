@@ -1,4 +1,4 @@
-rootProject.name = "activate-power-mode"
+rootProject.name = "activate-power-mode-pro"
 
 plugins {
     id("org.gradle.toolchains.foojay-resolver-convention") version "1.0.0"

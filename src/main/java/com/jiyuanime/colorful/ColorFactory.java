@@ -13,31 +13,34 @@ import java.util.Random;
  */
 public class ColorFactory {
 
-    private static final List<Color> colors = new ArrayList<>();
+    private ColorFactory() {}
+
+    private static final Random RANDOM = new Random();
+
+    private static final List<Color> COLORS = new ArrayList<>();
 
     private static void fill() {
-        if (colors.isEmpty()) {
-            colors.add(JBColor.RED);
-            colors.add(JBColor.ORANGE);
-            colors.add(JBColor.YELLOW);
-            colors.add(JBColor.GREEN);
-            colors.add(JBColor.CYAN);
-            colors.add(JBColor.BLUE);
-            colors.add(JBColor.MAGENTA);
+        if (COLORS.isEmpty()) {
+            COLORS.add(JBColor.RED);
+            COLORS.add(JBColor.ORANGE);
+            COLORS.add(JBColor.YELLOW);
+            COLORS.add(JBColor.GREEN);
+            COLORS.add(JBColor.CYAN);
+            COLORS.add(JBColor.BLUE);
+            COLORS.add(JBColor.MAGENTA);
         }
     }
 
     public static List<Color> getColors() {
         fill();
-        return colors;
+        return COLORS;
     }
 
     private static Color getOne() {
         int max = getColors().size();
         int min = 0;
-        Random random = new Random();
-        int index = random.nextInt(max) % (max - min + 1) + min;
-        return colors.get(index);
+        int index = RANDOM.nextInt(max) % (max - min + 1) + min;
+        return COLORS.get(index);
     }
 
     /**

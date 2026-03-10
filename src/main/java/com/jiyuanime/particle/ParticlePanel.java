@@ -5,12 +5,17 @@ import com.intellij.ui.JBColor;
 import com.intellij.util.ui.JBUI;
 import com.intellij.util.ui.UIUtil;
 import com.jiyuanime.config.Config;
+import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
 import javax.swing.border.Border;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 
 /**
  * 粒子容器
@@ -20,6 +25,12 @@ import java.util.concurrent.ConcurrentHashMap;
 public class ParticlePanel implements Runnable, Border {
     private final Logger log = Logger.getInstance(ParticlePanel.class);
 
+    private static final JBColor BACKGROUND_COLOR = new JBColor(
+            new Color(0x00FFFFFF, true),
+            new Color(0x00FFFFFF, true)
+    );
+    private static final ScheduledExecutorService SCHEDULER = Executors.newSingleThreadScheduledExecutor();
+    private static ScheduledFuture<?> task;
     private static final int MAX_PARTICLE_COUNT = 100;
     private static ParticlePanel particlePanel;
     private int mParticleIndex = 0;
@@ -33,8 +44,6 @@ public class ParticlePanel implements Runnable, Border {
     private volatile Point currentCaretPosition = null;
     private Thread thread;
     private volatile boolean isEnable = false;
-    private volatile boolean shouldStop = false;
-    private final Object particleLock = new Object();
     private final Config.State state = Config.getInstance().state;
 
     public static ParticlePanel getInstance() {
@@ -49,35 +58,42 @@ public class ParticlePanel implements Runnable, Border {
 
     @Override
     public void run() {
-        while (!shouldStop && isEnable) {
-            if (particleAreaGraphics != null) {
+        if (isEnable) {
+            task = SCHEDULER.scheduleAtFixedRate(this::eventLoop, 0, state.animationInterval, TimeUnit.MILLISECONDS);
+        }
+    }
 
-                particleAreaGraphics.setBackground(new JBColor(new Color(0x00FFFFFF, true), new Color(0x00FFFFFF, true)));
-                particleAreaGraphics.clearRect(0, 0, particleAreaWidth * 2, particleAreaHeight * 2);
+    public void eventLoop() {
+        if (particleAreaGraphics != null) {
+            particleAreaGraphics.setBackground(BACKGROUND_COLOR);
+            particleAreaGraphics.clearRect(0, 0, particleAreaWidth * 2, particleAreaHeight * 2);
 
-                synchronized (particleLock) {
-                    for (String key : particleViews.keySet()) {
-                        ParticleView particleView = particleViews.get(key);
-                        if (particleView != null && particleView.isEnable()) {
-                            particleAreaGraphics.setColor(particleView.mColor);
-                            particleAreaGraphics.fillOval((int) particleView.x, (int) particleView.y, ParticleView.PARTICLE_WIDTH, ParticleView.PARTICLE_WIDTH);
+            for (String key : particleViews.keySet()) {
+                ParticleView particleView = particleViews.get(key);
+                if (particleView != null && particleView.isEnable()) {
+                    particleAreaGraphics.setColor(particleView.mColor);
+                    particleAreaGraphics.fillOval((int) particleView.x, (int) particleView.y, state.particleSize, state.particleSize);
 
-                            update(particleView);
-                        }
-                    }
-                }
-
-                if (nowEditorComponent != null) {
-                    nowEditorComponent.repaint();
+                    update(particleView);
                 }
             }
 
-            try {
-                Thread.sleep(35);
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                break;
+            if (nowEditorComponent != null) {
+                nowEditorComponent.repaint();
             }
+        }
+
+        if (!isEnable && task != null) {
+            task.cancel(true);
+        }
+    }
+
+    public void restartTask() {
+        if (isEnable) {
+            if (task != null) {
+                task.cancel(false);
+            }
+            task = SCHEDULER.scheduleAtFixedRate(this::eventLoop, 0, state.animationInterval, TimeUnit.MILLISECONDS);
         }
     }
 
@@ -104,11 +120,9 @@ public class ParticlePanel implements Runnable, Border {
     }
 
     public void init(JComponent jComponent) {
-        synchronized (particleLock) {
-            if (particleViews == null) {
-                mParticleIndex = 0;
-                particleViews = new ConcurrentHashMap<>();
-            }
+        if (particleViews == null) {
+            mParticleIndex = 0;
+            particleViews = new ConcurrentHashMap<>();
         }
 
         if (nowEditorComponent != null) {
@@ -128,43 +142,43 @@ public class ParticlePanel implements Runnable, Border {
 
     public void clear() {
         isEnable = false;
-        shouldStop = true;
+
+        if (task != null) {
+            task.cancel(true);
+            task = null;
+        }
 
         if (thread != null) {
             thread.interrupt();
             try {
-                thread.join(1000);
+                thread.join(500);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             }
             thread = null;
         }
 
-        synchronized (particleLock) {
-            if (nowEditorComponent != null) {
-                nowEditorComponent.setBorder(null);
-                nowEditorComponent = null;
-            }
+        if (nowEditorComponent != null) {
+            nowEditorComponent.setBorder(null);
+            nowEditorComponent = null;
+        }
 
-            if (particleAreaGraphics != null) {
-                particleAreaGraphics = null;
-            }
+        if (particleAreaGraphics != null) {
+            particleAreaGraphics = null;
+        }
 
-            if (particleAreaImage != null) {
-                particleAreaImage = null;
-            }
+        if (particleAreaImage != null) {
+            particleAreaImage = null;
         }
     }
 
     public void destroy() {
         clear();
 
-        synchronized (particleLock) {
-            if (particleViews != null) {
-                particleViews.clear();
-            }
-            particleViews = null;
+        if (particleViews != null) {
+            particleViews.clear();
         }
+        particleViews = null;
     }
 
     public void update(ParticleView particleView) {
@@ -202,55 +216,49 @@ public class ParticlePanel implements Runnable, Border {
         if (this.isEnable) {
             if (particleAreaImage != null && particleAreaGraphics != null && nowEditorComponent != null) {
                 if (thread == null || !thread.isAlive()) {
-                    shouldStop = false;
                     thread = new Thread(this);
-                    thread.start();
                 }
+                thread.start();
             } else {
                 this.isEnable = false;
-                log.error("还没初始化 ParticlePanel");
+                log.warn("还没初始化 ParticlePanel");
             }
         } else {
             destroy();
         }
     }
 
-    public void sparkAtPosition(Point position, Color color, int fontSize) {
-        if (position != null) {
-            synchronized (particleLock) {
-                particleAreaSpeed.setLocation(position.x - caretPoint.x, position.y - caretPoint.y);
-                particlesDeviation(particleAreaSpeed);
-                caretPoint.setLocation(position.x, position.y);
+    public void sparkAtPosition(@NotNull Point position, Color color, int fontSize) {
+        particleAreaSpeed.setLocation(position.x - caretPoint.x, position.y - caretPoint.y);
+        particlesDeviation(particleAreaSpeed);
+        caretPoint.setLocation(position.x, position.y);
 
-                particleAreaWidth = ParticlePositionCalculateUtil.getParticleAreaWidth(fontSize);
-                particleAreaHeight = ParticlePositionCalculateUtil.getParticleAreaHeight(fontSize);
+        particleAreaWidth = ParticlePositionCalculateUtil.getParticleAreaWidth(fontSize);
+        particleAreaHeight = ParticlePositionCalculateUtil.getParticleAreaHeight(fontSize);
 
-                Point particlePoint = ParticlePositionCalculateUtil.getParticlePositionOnArea(particleAreaWidth, particleAreaHeight);
-                int particleNumber = 5 + (int) Math.round(Math.random() * state.particleMaxCount);
+        Point particlePoint = ParticlePositionCalculateUtil.getParticlePositionOnArea(particleAreaWidth, particleAreaHeight);
+        int particleNumber = state.particleMaxCount;
 
-                for (int i = 0; i < particleNumber; i++) {
-                    if (mParticleIndex >= MAX_PARTICLE_COUNT) {
-                        particleViews.get(String.valueOf(mParticleIndex % MAX_PARTICLE_COUNT)).reset(particlePoint, color, true);
-                    } else {
-                        ParticleView particleView = new ParticleView(particlePoint, color, true);
-                        particleViews.put(String.valueOf(mParticleIndex), particleView);
-                    }
+        for (int i = 0; i < particleNumber; i++) {
+            if (mParticleIndex >= MAX_PARTICLE_COUNT) {
+                particleViews.get(String.valueOf(mParticleIndex % MAX_PARTICLE_COUNT)).reset(particlePoint, color, true);
+            } else {
+                ParticleView particleView = new ParticleView(particlePoint, color, true);
+                particleViews.put(String.valueOf(mParticleIndex), particleView);
+            }
 
-                    if (mParticleIndex < MAX_PARTICLE_COUNT * 10) {
-                        mParticleIndex++;
-                    } else {
-                        mParticleIndex = MAX_PARTICLE_COUNT;
-                    }
-                }
+            if (mParticleIndex < MAX_PARTICLE_COUNT * 10) {
+                mParticleIndex++;
+            } else {
+                mParticleIndex = MAX_PARTICLE_COUNT;
             }
         }
     }
 
     public void sparkAtPositionAction(Color color, int fontSize) {
-        Point currentCaretPos = currentCaretPosition;
-        if (currentCaretPos != null) {
+        if (currentCaretPosition != null) {
+            sparkAtPosition(currentCaretPosition, color, fontSize);
             currentCaretPosition = null;
-            sparkAtPosition(currentCaretPos, color, fontSize);
         }
     }
 

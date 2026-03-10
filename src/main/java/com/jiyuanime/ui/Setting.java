@@ -2,23 +2,22 @@ package com.jiyuanime.ui;
 
 import com.intellij.openapi.options.Configurable;
 import com.intellij.openapi.options.ConfigurationException;
-import com.jiyuanime.config.Config;
-import com.jiyuanime.i18n.ActivatePowerModeBundle;
+import com.jiyuanime.i18n.ActivatePowerModeProBundle;
 import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
 
+/**
+ * @author zzqo
+ */
 public class Setting implements Configurable {
     private SettingForm form;
-
-    private final Config.State state = Config.getInstance().state;
-
 
     @Nls
     @Override
     public String getDisplayName() {
-        return ActivatePowerModeBundle.message("settings.title");
+        return ActivatePowerModeProBundle.message("settings.title");
     }
 
     @Nullable
@@ -30,12 +29,17 @@ public class Setting implements Configurable {
 
     @Override
     public boolean isModified() {
-        return form != null && form.isSettingsModified(state);
+        return form.isModified();
     }
 
     @Override
     public void apply() throws ConfigurationException {
         form.apply();
+    }
+
+    @Override
+    public void reset() {
+        form.initSetting();
     }
 
     @Override

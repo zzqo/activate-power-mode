@@ -5,6 +5,7 @@ import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.actionSystem.Presentation;
 import com.jiyuanime.config.Config;
+import org.jetbrains.annotations.NotNull;
 
 abstract class BaseSwitchAction extends AnAction {
 
@@ -23,7 +24,7 @@ abstract class BaseSwitchAction extends AnAction {
     }
 
     @Override
-    public void actionPerformed(AnActionEvent event) {
+    public void actionPerformed(@NotNull AnActionEvent event) {
         if(getSwitchFieldValue()) {
             disable(event);
         } else {

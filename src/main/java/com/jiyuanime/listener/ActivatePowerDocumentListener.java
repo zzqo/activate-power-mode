@@ -30,6 +30,7 @@ import java.util.ArrayList;
 public class ActivatePowerDocumentListener implements DocumentListener, Disposable {
 
     private final Config.State state = Config.getInstance().state;
+    private static ActivatePowerDocumentListener instance;
 
     private Project mProject;
     private final ArrayList<Document> documentList = new ArrayList<>();
@@ -40,6 +41,11 @@ public class ActivatePowerDocumentListener implements DocumentListener, Disposab
 
     public ActivatePowerDocumentListener(Project project) {
         mProject = project;
+        instance = this;
+    }
+
+    public static ActivatePowerDocumentListener getInstance() {
+        return instance;
     }
 
     @Override
@@ -48,7 +54,7 @@ public class ActivatePowerDocumentListener implements DocumentListener, Disposab
         ActivatePowerModeManage manage = ActivatePowerModeManage.getInstance();
 
         if (state.isCombo) {
-            // 文本变化在 CLICK_TIME_INTERVAL 时间内
+            // 文本变化在 clickTimeInterval 时间内
             if (manage.getClickCombo() == 0 || System.currentTimeMillis() - manage.getClickTimeStamp() <= state.clickTimeInterval) {
                 manage.setClickCombo(manage.getClickCombo() + 1);
                 state.maxClickCombo = Math.max(manage.getClickCombo(), state.maxClickCombo);
@@ -59,7 +65,7 @@ public class ActivatePowerDocumentListener implements DocumentListener, Disposab
             manage.setClickTimeStamp(System.currentTimeMillis());
         }
 
-        if ((state.isCombo && manage.getClickCombo() > state.openFunctionBorder && mProject != null) || (!state.isCombo && mProject != null)) {
+        if ((state.isCombo && manage.getClickCombo() > state.effectBorder && mProject != null) || (!state.isCombo && mProject != null)) {
             handleActivatePower(manage);
         }
 
@@ -82,7 +88,8 @@ public class ActivatePowerDocumentListener implements DocumentListener, Disposab
             mEditor = selectedTextEditor;
         }
 
-        if (mEditor != null) {
+        // 判断不处于批量模式
+        if (mEditor != null && !mEditor.getDocument().isInBulkUpdate()) {
             Point point = mEditor.visualPositionToXY(mEditor.getCaretModel().getCurrentCaret().getSelectionEndPosition());
             ParticlePanel.getInstance().setCurrentCaretPosition(point);
         }
@@ -128,41 +135,42 @@ public class ActivatePowerDocumentListener implements DocumentListener, Disposab
     /**
      * 处理ActivatePower效果
      */
-    private void handleActivatePower(ActivatePowerModeManage manage) {
+    public void handleActivatePower(ActivatePowerModeManage manage) {
         Editor selectedTextEditor = FileEditorManager.getInstance(mProject).getSelectedTextEditor();
         if (mEditor == null || mEditor != selectedTextEditor) {
             mEditor = selectedTextEditor;
         }
-        if (mEditor != null) {
-            manage.resetEditor(mEditor);
+        if (mEditor == null) {
+            return;
+        }
 
-            if (state.isShake) {
-                if (ShakeManager.getInstance().isEnable() && !ShakeManager.getInstance().isShaking()) {
-                    ShakeManager.getInstance().shake();
-                }
+        manage.resetEditor(mEditor);
+        if (state.isShake) {
+            if (ShakeManager.getInstance().isEnable() && !ShakeManager.getInstance().isShaking()) {
+                ShakeManager.getInstance().shake();
+            }
+        }
+
+        if (state.isSpark) {
+            Color color;
+            if (state.particleColor != null) {
+                color = state.particleColor;
+            } else if (state.isColorful) {
+                // 生成一个随机颜色
+                color = ColorFactory.gen();
+            } else {
+                EditorEx editorEx = (EditorEx) mEditor;
+                EditorHighlighter editorHighlighter = editorEx.getHighlighter();
+                HighlighterIterator highlighterIterator = editorHighlighter.createIterator(mEditor.getCaretModel().getCurrentCaret().getOffset());
+                Color fontColor = highlighterIterator.getTextAttributes().getForegroundColor();
+                color = fontColor != null ? fontColor : mEditor.getColorsScheme().getDefaultForeground();
             }
 
-            if (state.isSpark) {
-                Color color;
-                if (state.particleColor != null) {
-                    color = state.particleColor;
-                } else if (state.isColorful) {
-                    // 生成一个随机颜色
-                    color = ColorFactory.gen();
-                } else {
-                    EditorEx editorEx = (EditorEx) mEditor;
-                    EditorHighlighter editorHighlighter = editorEx.getHighlighter();
-                    HighlighterIterator highlighterIterator = editorHighlighter.createIterator(mEditor.getCaretModel().getCurrentCaret().getOffset());
-                    Color fontColor = highlighterIterator.getTextAttributes().getForegroundColor();
-                    color = fontColor != null ? fontColor : mEditor.getColorsScheme().getDefaultForeground();
-                }
+            int fontSize = mEditor.getColorsScheme().getEditorFontSize();
 
-                int fontSize = mEditor.getColorsScheme().getEditorFontSize();
-
-                ParticlePanel particlePanel = ParticlePanel.getInstance();
-                if (particlePanel.isEnable()) {
-                    particlePanel.sparkAtPositionAction(color, fontSize);
-                }
+            ParticlePanel particlePanel = ParticlePanel.getInstance();
+            if (particlePanel.isEnable()) {
+                particlePanel.sparkAtPositionAction(color, fontSize);
             }
         }
     }

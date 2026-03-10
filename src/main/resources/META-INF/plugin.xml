@@ -1,26 +1,24 @@
 <idea-plugin>
-    <id>com.jiyuanime.ActivatePowerModeApplicationPlugin</id>
-    <name>Activate Power Mode</name>
     <vendor email="" url="https://github.com/ViceFantasyPlace/activate-power-mode">ViceFantasyPlace</vendor>
 
     <!-- please see http://www.jetbrains.org/intellij/sdk/docs/basics/getting_started/plugin_compatibility.html
          on how to target different products -->
     <depends>com.intellij.modules.lang</depends>
 
-    <resource-bundle>messages.ActivatePowerModeBundle</resource-bundle>
+    <resource-bundle>messages.ActivatePowerModeProBundle</resource-bundle>
 
     <extensions defaultExtensionNs="com.intellij">
         <applicationService serviceInterface="com.jiyuanime.config.Config"
                             serviceImplementation="com.jiyuanime.config.Config"/>
         <applicationConfigurable instance="com.jiyuanime.ui.Setting"/>
 
-        <postStartupActivity implementation="com.jiyuanime.ActivatePowerModeApplicationPlugin"/>
+        <postStartupActivity implementation="com.jiyuanime.listener.ActivatePowerModeListener"/>
     </extensions>
 
     <actions>
         <!-- Add your actions here -->
-        <group id="ActivatePowerModeGroup" popup="true"
-               text="Activate Power Mode">
+        <group id="ActivatePowerModeProGroup" popup="true"
+               text="Activate Power Mode Pro">
             <add-to-group group-id="WindowMenu" anchor="first"/>
 
             <action id="ActivatePowerEnable" class="com.jiyuanime.action.ActivatePowerEnableAction"
@@ -48,6 +46,10 @@
             <action id="ColorfulSwitch" class="com.jiyuanime.action.ColorfulSwitchAction"
                     text="colorful"
                     description="colorful"/>
+
+            <action id="ClearComboCount" class="com.jiyuanime.action.ClearComboCountAction"
+                    text="Clear Combo"
+                    description="Clear combo count"/>
         </group>
 
     </actions>

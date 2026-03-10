@@ -20,9 +20,13 @@ import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
 import java.awt.*;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -46,6 +50,7 @@ public class ActivatePowerModeManage {
     private final Config.State state = Config.getInstance().state;
 
     private final HashMap<Project, ActivatePowerDocumentListener> mDocListenerMap = new HashMap<>();
+    private final Map<String, MessageBusConnection> activeConnections = new HashMap<>();
     private Editor mCurrentEditor;
 
     private long mClickTimeStamp;
@@ -56,67 +61,60 @@ public class ActivatePowerModeManage {
     private JProgressBar mClickTimeStampProgressBar;
 
     public void init(Project project) {
+        if (project == null) {
+            log.warn("ActivatePowerEnableAction 初始化数据失败");
+            return;
+        }
 
-        if (project != null) {
-            // 监听FileEditor的状态
-            MessageBusConnection connection = project.getMessageBus().connect();
-            connection.subscribe(FileEditorManagerListener.FILE_EDITOR_MANAGER, new FileEditorManagerListener() {
-                @Override
-                public void fileOpened(@NotNull FileEditorManager source, @NotNull VirtualFile file) {
-                    FileEditorManagerListener.super.fileOpened(source, file);
+        // 监听FileEditor的状态
+        MessageBusConnection connection = project.getMessageBus().connect();
+        this.activeConnections.put(project.getBasePath(), connection);
+        connection.subscribe(FileEditorManagerListener.FILE_EDITOR_MANAGER, new FileEditorManagerListener() {
+            @Override
+            public void fileOpened(@NotNull FileEditorManager source, @NotNull VirtualFile file) {
+                destroyShake();
+                destroyParticle();
+                mCurrentEditor = null;
 
-                    destroyShake();
-                    destroyParticle();
-                    mCurrentEditor = null;
+                initDocument(source.getProject(), FileDocumentManager.getInstance().getDocument(file));
+            }
 
-                    initDocument(source.getProject(), FileDocumentManager.getInstance().getDocument(file));
-                }
-
-                @Override
-                public void fileClosed(@NotNull FileEditorManager source, @NotNull VirtualFile file) {
-                    FileEditorManagerListener.super.fileClosed(source, file);
-
-                    ActivatePowerDocumentListener activatePowerDocumentListener = mDocListenerMap.get(source.getProject());
-                    if (activatePowerDocumentListener != null) {
-                        activatePowerDocumentListener.clean(FileDocumentManager.getInstance().getDocument(file), true);
-                    }
-                }
-
-                @Override
-                public void selectionChanged(@NotNull FileEditorManagerEvent event) {
-                    FileEditorManagerListener.super.selectionChanged(event);
-
-                    if (state.isEnable) {
-                        destroyShake();
-                        destroyParticle();
-                        mCurrentEditor = null;
-
-                        FileEditorManager fileEditorManager = event.getManager();
-                        VirtualFile virtualFile = event.getNewFile();
-                        if (virtualFile != null) {
-                            initDocument(fileEditorManager.getProject(), FileDocumentManager.getInstance().getDocument(virtualFile));
-                        }
-                    }
-                }
-            });
-
-            FileEditorManager fileEditorManager = FileEditorManager.getInstance(project);
-
-            if (fileEditorManager != null) {
-                Editor editor = fileEditorManager.getSelectedTextEditor();
-                if (editor != null) {
-                    destroyShake();
-                    destroyParticle();
-                    mCurrentEditor = null;
-
-                    initDocument(project, editor.getDocument());
+            @Override
+            public void fileClosed(@NotNull FileEditorManager source, @NotNull VirtualFile file) {
+                ActivatePowerDocumentListener activatePowerDocumentListener = mDocListenerMap.get(source.getProject());
+                if (activatePowerDocumentListener != null) {
+                    activatePowerDocumentListener.clean(FileDocumentManager.getInstance().getDocument(file), true);
                 }
             }
 
-        } else {
-            log.error("ActivatePowerEnableAction 初始化数据失败");
-        }
+            @Override
+            public void selectionChanged(@NotNull FileEditorManagerEvent event) {
+                if (state.isEnable) {
+                    destroyShake();
+                    destroyParticle();
+                    mCurrentEditor = null;
 
+                    FileEditorManager fileEditorManager = event.getManager();
+                    VirtualFile virtualFile = event.getNewFile();
+                    if (virtualFile != null) {
+                        initDocument(fileEditorManager.getProject(), FileDocumentManager.getInstance().getDocument(virtualFile));
+                    }
+                }
+            }
+        });
+
+        FileEditorManager fileEditorManager = FileEditorManager.getInstance(project);
+
+        if (fileEditorManager != null) {
+            Editor editor = fileEditorManager.getSelectedTextEditor();
+            if (editor != null) {
+                destroyShake();
+                destroyParticle();
+                mCurrentEditor = null;
+
+                initDocument(project, editor.getDocument());
+            }
+        }
     }
 
     private void initEditor(Editor editor) {
@@ -176,6 +174,9 @@ public class ActivatePowerModeManage {
     public void destroy(Project project, boolean isRemoveProject) {
         destroyShake();
         destroyParticle();
+        if (state.isCombo) {
+            clearComboView(project);
+        }
         destroyDocumentListener(project, isRemoveProject);
         mCurrentEditor = null;
         destroyProjectMessageBus(project, isRemoveProject);
@@ -189,21 +190,15 @@ public class ActivatePowerModeManage {
     }
 
     private void initShake(JComponent jComponent) {
-        Config.State state = Config.getInstance().state;
-        if (state.isShake) {
-            if (ShakeManager.getInstance().getNowEditorJComponent() != jComponent) {
-                ShakeManager.getInstance().reset(jComponent);
-            }
+        if (state.isShake && ShakeManager.getInstance().getNowEditorComponent() != jComponent) {
+            ShakeManager.getInstance().reset(jComponent);
         }
     }
 
     private void initParticle(JComponent jContentComponent) {
-        Config.State state = Config.getInstance().state;
-        if (state.isSpark) {
-            if (ParticlePanel.getInstance().getNowEditorJComponent() != jContentComponent) {
-                ParticlePanel.getInstance().reset(jContentComponent);
-                jContentComponent.setBorder(ParticlePanel.getInstance());
-            }
+        if (state.isSpark && ParticlePanel.getInstance().getNowEditorJComponent() != jContentComponent) {
+            ParticlePanel.getInstance().reset(jContentComponent);
+            jContentComponent.setBorder(ParticlePanel.getInstance());
         }
     }
 
@@ -220,44 +215,48 @@ public class ActivatePowerModeManage {
         JLabel comboLabel = new JLabel("0");
         comboLabel.setHorizontalAlignment(SwingConstants.CENTER);
         comboLabel.setBackground(new JBColor(new Color(0x00FFFFFF, true), new Color(0x00FFFFFF, true)));
-        comboLabel.setForeground(JBColor.GREEN);
+        comboLabel.setForeground(new JBColor(new Color(0xDD00E600, true), new Color(0xDD00E600, true)));
 
         try {
-            InputStream fontInputStream = getClass().getResourceAsStream("/font/PressStart2P-Regular.ttf");
-            Font font;
-            if (fontInputStream == null) {
-                font = new Font("Default", Font.BOLD, 64);
-            } else {
-                font = Font.createFont(Font.TRUETYPE_FONT, fontInputStream);
-            }
-            font = font.deriveFont(Font.BOLD, 64f);
+            Font font = initFont().deriveFont(Font.BOLD, 64f);
             comboLabel.setFont(font);
         } catch (FontFormatException | IOException e) {
-            log.error(e);
+            e.printStackTrace();
             comboLabel.setFont(new Font("Default", Font.BOLD, 64));
         }
 
         return comboLabel;
     }
 
+    private Font initFont() throws IOException, FontFormatException {
+        InputStream fontInputStream;
+
+        if (Objects.isNull(state.fontFileLocation)) {
+            fontInputStream = getClass().getResourceAsStream("/font/PressStart2P-Regular.ttf");
+        } else {
+            File fontFile = new File(state.fontFileLocation);
+            if (fontFile.exists()) {
+                fontInputStream = new FileInputStream(fontFile);
+            } else {
+                throw new IOException("Cannot load font file: " + state.fontFileLocation);
+            }
+        }
+
+        return Font.createFont(Font.TRUETYPE_FONT, fontInputStream);
+    }
+
     private JLabel initMaxComboLabel() {
         JLabel comboLabel = new JLabel("Max " + Config.getInstance().state.maxClickCombo);
         comboLabel.setHorizontalAlignment(SwingConstants.CENTER);
         comboLabel.setBackground(new JBColor(new Color(0x00FFFFFF, true), new Color(0x00FFFFFF, true)));
-        comboLabel.setForeground(JBColor.GREEN);
+        comboLabel.setForeground(new JBColor(new Color(0xDD00E600, true), new Color(0xDD00E600, true)));
 
         try {
-            InputStream fontInputStream = getClass().getResourceAsStream("/font/PressStart2P-Regular.ttf");
-            Font font;
-            if (fontInputStream == null) {
-                font = new Font("Default", Font.BOLD, 64);
-            } else {
-                font = Font.createFont(Font.TRUETYPE_FONT, fontInputStream);
-            }
+            Font font = initFont();
             font = font.deriveFont(Font.BOLD, 24f);
             comboLabel.setFont(font);
         } catch (FontFormatException | IOException e) {
-            log.error(e);
+            e.printStackTrace();
             comboLabel.setFont(new Font("Default", Font.BOLD, 24));
         }
 
@@ -300,9 +299,8 @@ public class ActivatePowerModeManage {
     }
 
     public void clearComboView(Project project) {
-
         Editor selectedTextEditor = FileEditorManager.getInstance(project).getSelectedTextEditor();
-        if (selectedTextEditor != null) {
+        if (selectedTextEditor != null && mComboPanel != null) {
             JComponent contentComponent = selectedTextEditor.getContentComponent();
             contentComponent.remove(mComboPanel);
         }
@@ -350,8 +348,12 @@ public class ActivatePowerModeManage {
     }
 
     private void destroyDocumentListener(Project project, boolean isRemoveProject) {
-        if (isRemoveProject) {
-            mDocListenerMap.remove(project);
+        ActivatePowerDocumentListener activatePowerDocumentListener = mDocListenerMap.get(project);
+        if (activatePowerDocumentListener != null) {
+            activatePowerDocumentListener.destroy();
+            if (isRemoveProject) {
+                mDocListenerMap.remove(project);
+            }
         }
     }
 
@@ -364,24 +366,11 @@ public class ActivatePowerModeManage {
     }
 
     private void destroyProjectMessageBus(Project project, boolean isRemoveProject) {
-        if (project != null) {
-            MessageBusConnection connection = project.getMessageBus().connect();
-            connection.subscribe(FileEditorManagerListener.FILE_EDITOR_MANAGER, new FileEditorManagerListener() {
-                @Override
-                public void fileOpened(@NotNull FileEditorManager source, @NotNull VirtualFile file) {
-                    FileEditorManagerListener.super.fileOpened(source, file);
-                }
-
-                @Override
-                public void fileClosed(@NotNull FileEditorManager source, @NotNull VirtualFile file) {
-                    FileEditorManagerListener.super.fileClosed(source, file);
-                }
-
-                @Override
-                public void selectionChanged(@NotNull FileEditorManagerEvent event) {
-                    FileEditorManagerListener.super.selectionChanged(event);
-                }
-            });
+        if (project != null && !project.isDisposed()) {
+            MessageBusConnection connection = this.activeConnections.remove(project.getBasePath());
+            if (connection != null) {
+                connection.disconnect();
+            }
         }
         if (isRemoveProject) {
             mDocListenerMap.remove(project);

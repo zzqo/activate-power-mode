@@ -5,6 +5,7 @@ import com.intellij.openapi.components.PersistentStateComponent;
 import com.intellij.openapi.components.State;
 import com.intellij.openapi.components.Storage;
 import com.intellij.util.xmlb.XmlSerializerUtil;
+import com.jiyuanime.i18n.ActivatePowerModeProBundle;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -14,8 +15,9 @@ import java.awt.*;
  * 配置文件
  * Created by KADO on 15/12/17.
  */
-@State(name = "activate-power-mode", storages = {@Storage("activate-power-mode.xml")})
+@State(name = "ActivatePowerMode", storages = {@Storage("ActivatePowerMode.xml")})
 public class Config implements PersistentStateComponent<Config.State> {
+    public static final String DEFAULT = ActivatePowerModeProBundle.message("settings.default");
 
     @Nullable
     @Override
@@ -31,26 +33,32 @@ public class Config implements PersistentStateComponent<Config.State> {
     public State state = new State();
 
     public Config() {
-
         defaultInitState();
-
     }
 
     public void defaultInitState() {
-
+        // 是否开启
         state.isEnable = true;
-
+        // 是否震动
+        state.isShake = false;
+        // 是否显示火花
         state.isSpark = true;
-
-        state.isShake = true;
-
-        state.isCombo = true;
-
-        state.isColorful = false;
-
+        // 色彩鲜艳的配置项
+        state.isColorful = true;
+        // 开启效果的界限
+        state.effectBorder = 30;
+        // 是否开启连击
+        state.isCombo = false;
+        // 每次生成的粒子量
         state.particleMaxCount = 5;
-
+        // 粒子颜色,为 null 则代表 auto
         state.particleColor = null;
+        // 粒子大小
+        state.particleSize = 6;
+        // 粒子动画刷新间隔（ms）
+        state.animationInterval = 35;
+        // 字体文件位置
+        state.fontFileLocation = null;
     }
 
     public static Config getInstance() {
@@ -77,12 +85,12 @@ public class Config implements PersistentStateComponent<Config.State> {
         /**
          * 色彩鲜艳的配置项
          */
-        public boolean isColorful = true;
+        public boolean isColorful = false;
 
         /**
          * 开启效果的界限
          */
-        public int openFunctionBorder = 30;
+        public int effectBorder = 30;
 
         /**
          * 敲击的时间间隔
@@ -92,10 +100,10 @@ public class Config implements PersistentStateComponent<Config.State> {
         /**
          * 敲击的最大连击数
          */
-        public int maxClickCombo;
+        public int maxClickCombo = 0;
 
         /**
-         * 是否开启 Combo
+         * 是否开启连击
          */
         public boolean isCombo = false;
 
@@ -105,10 +113,24 @@ public class Config implements PersistentStateComponent<Config.State> {
         public int particleMaxCount = 5;
 
         /**
-         * 粒子颜色,为null则代表auto
+         * 粒子颜色,为 null 则代表 auto
          */
         public Color particleColor = null;
 
+        /**
+         * 粒子大小
+         */
+        public int particleSize = 6;
+
+        /**
+         * 粒子动画刷新间隔（ms）
+         */
+        public int animationInterval = 35;
+
+        /**
+         * 字体文件位置
+         */
+        public String fontFileLocation = null;
     }
 
 

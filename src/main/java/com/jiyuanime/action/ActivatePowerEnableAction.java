@@ -4,7 +4,7 @@ import com.intellij.icons.AllIcons;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.actionSystem.Presentation;
 import com.jiyuanime.ActivatePowerModeManage;
-import com.jiyuanime.i18n.ActivatePowerModeBundle;
+import com.jiyuanime.i18n.ActivatePowerModeProBundle;
 
 
 /**
@@ -28,15 +28,15 @@ public class ActivatePowerEnableAction extends BaseSwitchAction {
     @Override
     protected void showEnable(Presentation presentation) {
         presentation.setIcon(AllIcons.General.InspectionsOK);
-        presentation.setText(ActivatePowerModeBundle.message("action.ActivatePowerEnable.text"));
-        presentation.setDescription(ActivatePowerModeBundle.message("action.ActivatePowerEnable.description"));
+        presentation.setText(ActivatePowerModeProBundle.message("action.ActivatePowerEnable.text"));
+        presentation.setDescription(ActivatePowerModeProBundle.message("action.ActivatePowerEnable.description"));
     }
 
     @Override
     protected void showDisable(Presentation presentation) {
         presentation.setIcon(AllIcons.Actions.Cancel);
-        presentation.setText(ActivatePowerModeBundle.message("action.ActivatePowerEnable.text"));
-        presentation.setDescription(ActivatePowerModeBundle.message("action.ActivatePowerEnable.description"));
+        presentation.setText(ActivatePowerModeProBundle.message("action.ActivatePowerEnable.text"));
+        presentation.setDescription(ActivatePowerModeProBundle.message("action.ActivatePowerEnable.description"));
     }
 
     @Override
