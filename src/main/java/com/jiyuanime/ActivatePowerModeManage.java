@@ -221,7 +221,7 @@ public class ActivatePowerModeManage {
             Font font = initFont().deriveFont(Font.BOLD, 64f);
             comboLabel.setFont(font);
         } catch (FontFormatException | IOException e) {
-            e.printStackTrace();
+            log.warn(e);
             comboLabel.setFont(new Font("Default", Font.BOLD, 64));
         }
 
@@ -256,7 +256,7 @@ public class ActivatePowerModeManage {
             font = font.deriveFont(Font.BOLD, 24f);
             comboLabel.setFont(font);
         } catch (FontFormatException | IOException e) {
-            e.printStackTrace();
+            log.warn(e);
             comboLabel.setFont(new Font("Default", Font.BOLD, 24));
         }
 
