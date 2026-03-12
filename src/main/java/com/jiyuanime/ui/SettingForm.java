@@ -54,6 +54,7 @@ public class SettingForm {
     private JCheckBox mixModeCheckBox;
     private JLabel particleShapeLabel;
     private JLabel particlePreviewLabel;
+    private JCheckBox isComboCheckBox;
 
     private final Config.State state = Config.getInstance().state;
     private final ActivatePowerModeManage manager = ActivatePowerModeManage.getInstance();
@@ -79,6 +80,7 @@ public class SettingForm {
         particleShapeLabel.setText(ActivatePowerModeProBundle.message("setting.particle.shape"));
         mixModeCheckBox.setText(ActivatePowerModeProBundle.message("setting.mix.mode.enabled"));
         particlePreviewLabel.setText(ActivatePowerModeProBundle.message("setting.particle.preview"));
+        isComboCheckBox.setText(ActivatePowerModeProBundle.message("action.ComboSwitchAction.text"));
     }
 
     private void initListener() {
@@ -87,6 +89,10 @@ public class SettingForm {
             colorChooser.setSelectedColor(null);
             colorChooser.setEditable(!item.isSelected());
             particlePreviewPanel.setParticleColor(null);
+        });
+        isComboCheckBox.addItemListener(event -> {
+            JCheckBox item = (JCheckBox) event.getItem();
+            activateBorder.setEnabled(item.isSelected());
         });
         particleSizeSlider.addChangeListener(event -> {
             JSlider source = (JSlider) event.getSource();
@@ -162,6 +168,8 @@ public class SettingForm {
         BaseParticleShape shape = ShapeRegistry.getByShape(state.particleShape);
         particleShapeComboBox.setSelectedItem(shape);
 
+        isComboCheckBox.setSelected(state.isCombo);
+        activateBorder.setEnabled(state.isCombo);
         mixModeCheckBox.setSelected(state.shapeMixMode);
         particleShapeComboBox.setEnabled(!state.shapeMixMode);
 
@@ -177,14 +185,13 @@ public class SettingForm {
 
     public boolean isModified() {
         try {
-            boolean shapeChanged = particleShapeComboBox != null &&
-                    !Comparing.equal(
-                            particleShapeComboBox.getSelectedItem() != null ? ((BaseParticleShape) particleShapeComboBox.getSelectedItem()).getShape() : Shape.CIRCLE,
-                            state.particleShape
-                    );
+            boolean shapeChanged = !Comparing.equal(
+                    particleShapeComboBox.getSelectedItem() != null ? ((BaseParticleShape) particleShapeComboBox.getSelectedItem()).getShape() : Shape.CIRCLE,
+                    state.particleShape
+            );
 
-            boolean mixModeChanged = mixModeCheckBox != null &&
-                    mixModeCheckBox.isSelected() != state.shapeMixMode;
+            boolean mixModeChanged = mixModeCheckBox.isSelected() != state.shapeMixMode;
+            boolean isComboChanged = isComboCheckBox.isSelected() != state.isCombo;
 
             return !Comparing.equal(state.particleMaxCount, particleMaxCountSlider.getValue()) ||
                     !Comparing.equal(state.animationInterval, animationIntervalSlider.getValue()) ||
@@ -193,6 +200,7 @@ public class SettingForm {
                     !Comparing.strEqual(state.fontFileLocation == null ? Config.DEFAULT : state.fontFileLocation, comboFont.getText()) ||
                     !Comparing.equal(state.particleColor, colorAutoCheckBox.isSelected() ? null : colorChooser.getSelectedColor()) ||
                     shapeChanged ||
+                    isComboChanged ||
                     mixModeChanged;
         } catch (NumberFormatException e) {
             return true;
