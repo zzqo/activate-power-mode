@@ -5,7 +5,11 @@ import com.intellij.openapi.components.PersistentStateComponent;
 import com.intellij.openapi.components.State;
 import com.intellij.openapi.components.Storage;
 import com.intellij.util.xmlb.XmlSerializerUtil;
+import com.intellij.util.xmlb.annotations.OptionTag;
+import com.jiyuanime.config.converter.ColorConverter;
+import com.jiyuanime.config.converter.ShapeConverter;
 import com.jiyuanime.i18n.ActivatePowerModeProBundle;
+import com.jiyuanime.particle.shape.Shape;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -14,8 +18,10 @@ import java.awt.*;
 /**
  * 配置文件
  * Created by KADO on 15/12/17.
+ *
+ * @author zzqo
  */
-@State(name = "ActivatePowerMode", storages = {@Storage("ActivatePowerMode.xml")})
+@State(name = "ActivatePowerModePro", storages = {@Storage("ActivatePowerModePro.xml")})
 public class Config implements PersistentStateComponent<Config.State> {
     public static final String DEFAULT = ActivatePowerModeProBundle.message("settings.default");
 
@@ -51,7 +57,7 @@ public class Config implements PersistentStateComponent<Config.State> {
         state.isCombo = false;
         // 每次生成的粒子量
         state.particleMaxCount = 5;
-        // 粒子颜色,为 null 则代表 auto
+        // 粒子颜色，为 null 则代表 auto
         state.particleColor = null;
         // 粒子大小
         state.particleSize = 6;
@@ -59,6 +65,10 @@ public class Config implements PersistentStateComponent<Config.State> {
         state.animationInterval = 35;
         // 字体文件位置
         state.fontFileLocation = null;
+        // 粒子形状 ID（默认圆形）
+        state.particleShape = Shape.CIRCLE;
+        // 是否启用混合模式
+        state.shapeMixMode = false;
     }
 
     public static Config getInstance() {
@@ -113,8 +123,9 @@ public class Config implements PersistentStateComponent<Config.State> {
         public int particleMaxCount = 5;
 
         /**
-         * 粒子颜色,为 null 则代表 auto
+         * 粒子颜色，为 null 则代表 auto
          */
+        @OptionTag(converter = ColorConverter.class)
         public Color particleColor = null;
 
         /**
@@ -131,6 +142,17 @@ public class Config implements PersistentStateComponent<Config.State> {
          * 字体文件位置
          */
         public String fontFileLocation = null;
+
+        /**
+         * 粒子形状 ID（默认圆形）
+         */
+        @OptionTag(converter = ShapeConverter.class)
+        public Shape particleShape = Shape.CIRCLE;
+
+        /**
+         * 是否启用混合模式
+         */
+        public boolean shapeMixMode = false;
     }
 
 

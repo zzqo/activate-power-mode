@@ -1,6 +1,7 @@
 package com.jiyuanime.particle;
 
 import com.intellij.ui.JBColor;
+import com.jiyuanime.particle.shape.BaseParticleShape;
 
 import java.awt.*;
 import java.awt.color.ColorSpace;
@@ -8,7 +9,8 @@ import java.awt.color.ColorSpace;
 /**
  * 粒子类
  * <p>
- * Created by KADO on 15/12/15.
+ * Created by zzqo on 15/12/15.
+ * @author zzqo
  */
 public class ParticleView {
     public Color mColor;
@@ -17,18 +19,29 @@ public class ParticleView {
     public float vX, vY;
 
     public Point mPoint;
+    
+    private BaseParticleShape shape;
 
     private boolean isEnable = false;
 
     public ParticleView(Point point, Color color, boolean isEnable) {
-        init(point, color, isEnable);
+        this(point, color, isEnable, null);
+    }
+    
+    public ParticleView(Point point, Color color, boolean isEnable, BaseParticleShape shape) {
+        init(point, color, isEnable, shape);
     }
 
     public void init(Point point, Color color, boolean isEnable) {
+        init(point, color, isEnable, null);
+    }
+    
+    public void init(Point point, Color color, boolean isEnable, BaseParticleShape shape) {
         this.isEnable = isEnable;
         this.mPoint = point;
         this.mColor = color;
         this.mAlpha = 1.0f;
+        this.shape = shape;
 
         x = (float) this.mPoint.getX();
         y = (float) this.mPoint.getY();
@@ -38,7 +51,11 @@ public class ParticleView {
     }
 
     public void reset(Point point, Color color, boolean isEnable) {
-        init(point, color, isEnable);
+        init(point, color, isEnable, null);
+    }
+    
+    public void reset(Point point, Color color, boolean isEnable, BaseParticleShape shape) {
+        init(point, color, isEnable, shape);
     }
 
     public void update() {
@@ -74,5 +91,13 @@ public class ParticleView {
 
     public void setY(float y) {
         this.y = y;
+    }
+    
+    public BaseParticleShape getShape() {
+        return shape;
+    }
+    
+    public void setShape(BaseParticleShape shape) {
+        this.shape = shape;
     }
 }

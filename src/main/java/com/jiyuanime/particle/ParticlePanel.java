@@ -5,6 +5,8 @@ import com.intellij.ui.JBColor;
 import com.intellij.util.ui.JBUI;
 import com.intellij.util.ui.UIUtil;
 import com.jiyuanime.config.Config;
+import com.jiyuanime.particle.shape.BaseParticleShape;
+import com.jiyuanime.particle.shape.ShapeRegistry;
 import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
@@ -20,7 +22,8 @@ import java.util.concurrent.TimeUnit;
 /**
  * 粒子容器
  * <p>
- * Created by KADO on 15/12/15.
+ * Created by zzqo on 15/12/15.
+ * @author zzqo
  */
 public class ParticlePanel implements Runnable, Border {
     private final Logger log = Logger.getInstance(ParticlePanel.class);
@@ -72,7 +75,18 @@ public class ParticlePanel implements Runnable, Border {
                 ParticleView particleView = particleViews.get(key);
                 if (particleView != null && particleView.isEnable()) {
                     particleAreaGraphics.setColor(particleView.mColor);
-                    particleAreaGraphics.fillOval((int) particleView.x, (int) particleView.y, state.particleSize, state.particleSize);
+                    
+                    BaseParticleShape shape = particleView.getShape();
+                    if (shape == null) {
+                        shape = ShapeRegistry.getByShape(state.particleShape);
+                    }
+                    
+                    shape.draw(
+                        particleAreaGraphics,
+                        (int) particleView.x,
+                        (int) particleView.y,
+                        state.particleSize
+                    );
 
                     update(particleView);
                 }
@@ -196,11 +210,9 @@ public class ParticlePanel implements Runnable, Border {
 
         particleAreaImage = UIUtil.createImage(jComponent, particleAreaWidth, particleAreaHeight, BufferedImage.TYPE_INT_ARGB);
         particleAreaGraphics = particleAreaImage.createGraphics();
-        // 设置 透明窗体背景
         particleAreaImage = particleAreaGraphics.getDeviceConfiguration().createCompatibleImage(particleAreaWidth, particleAreaHeight, Transparency.TRANSLUCENT);
         particleAreaGraphics.dispose();
         particleAreaGraphics = particleAreaImage.createGraphics();
-        // 设置 透明窗体背景 END
     }
 
     private void particlesDeviation(Point speed) {
@@ -240,10 +252,17 @@ public class ParticlePanel implements Runnable, Border {
         int particleNumber = state.particleMaxCount;
 
         for (int i = 0; i < particleNumber; i++) {
-            if (mParticleIndex >= MAX_PARTICLE_COUNT) {
-                particleViews.get(String.valueOf(mParticleIndex % MAX_PARTICLE_COUNT)).reset(particlePoint, color, true);
+            BaseParticleShape shape;
+            if (state.shapeMixMode) {
+                shape = ShapeRegistry.getRandomShape();
             } else {
-                ParticleView particleView = new ParticleView(particlePoint, color, true);
+                shape = ShapeRegistry.getByShape(state.particleShape);
+            }
+            
+            if (mParticleIndex >= MAX_PARTICLE_COUNT) {
+                particleViews.get(String.valueOf(mParticleIndex % MAX_PARTICLE_COUNT)).reset(particlePoint, color, true, shape);
+            } else {
+                ParticleView particleView = new ParticleView(particlePoint, color, true, shape);
                 particleViews.put(String.valueOf(mParticleIndex), particleView);
             }
 

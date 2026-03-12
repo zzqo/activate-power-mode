@@ -5,7 +5,7 @@ import java.awt.*;
 /**
  * 粒子位置计算工具
  * <p>
- * Created by KADO on 15/12/16.
+ * Created by zzqo on 15/12/16.
  */
 public class ParticlePositionCalculateUtil {
 

@@ -38,11 +38,6 @@ public class Setting implements Configurable {
     }
 
     @Override
-    public void reset() {
-        form.reset();
-    }
-
-    @Override
     public void disposeUIResources() {
         form = null;
     }

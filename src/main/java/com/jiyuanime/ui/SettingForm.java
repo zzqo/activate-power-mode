@@ -15,6 +15,9 @@ import com.jiyuanime.ActivatePowerModeManage;
 import com.jiyuanime.config.Config;
 import com.jiyuanime.i18n.ActivatePowerModeProBundle;
 import com.jiyuanime.particle.ParticlePanel;
+import com.jiyuanime.particle.shape.BaseParticleShape;
+import com.jiyuanime.particle.shape.Shape;
+import com.jiyuanime.particle.shape.ShapeRegistry;
 
 import javax.swing.*;
 import java.io.File;
@@ -46,6 +49,11 @@ public class SettingForm {
     private JSlider animationIntervalSlider;
     private JLabel intervalValue;
     private JButton resetButton;
+    private ParticlePreviewPanel particlePreviewPanel;
+    private JComboBox<BaseParticleShape> particleShapeComboBox;
+    private JCheckBox mixModeCheckBox;
+    private JLabel particleShapeLabel;
+    private JLabel particlePreviewLabel;
 
     private final Config.State state = Config.getInstance().state;
     private final ActivatePowerModeManage manager = ActivatePowerModeManage.getInstance();
@@ -68,6 +76,9 @@ public class SettingForm {
         effectTriggerBorderLabel.setText(ActivatePowerModeProBundle.message("settings.effect.trigger.border"));
         comboLabel.setText(ActivatePowerModeProBundle.message("settings.combo.time"));
         resetButton.setText(ActivatePowerModeProBundle.message("settings.reset.to.default"));
+        particleShapeLabel.setText(ActivatePowerModeProBundle.message("setting.particle.shape"));
+        mixModeCheckBox.setText(ActivatePowerModeProBundle.message("setting.mix.mode.enabled"));
+        particlePreviewLabel.setText(ActivatePowerModeProBundle.message("setting.particle.preview"));
     }
 
     private void initListener() {
@@ -75,6 +86,7 @@ public class SettingForm {
             JCheckBox item = (JCheckBox) event.getItem();
             colorChooser.setSelectedColor(null);
             colorChooser.setEditable(!item.isSelected());
+            particlePreviewPanel.setParticleColor(null);
         });
         particleSizeSlider.addChangeListener(event -> {
             JSlider source = (JSlider) event.getSource();
@@ -103,6 +115,27 @@ public class SettingForm {
                                                                                .withTitle(ActivatePowerModeProBundle.message("settings.combo.font"));
             FileChooser.chooseFile(fontFileConfig, project, currentDir, file -> this.comboFont.setText(file.getPath()));
         });
+
+        particleShapeComboBox.setModel(new DefaultComboBoxModel<>(ShapeRegistry.getAllShapes().toArray(new BaseParticleShape[0])));
+        particleShapeComboBox.addItemListener(e -> {
+            BaseParticleShape shape = (BaseParticleShape) particleShapeComboBox.getSelectedItem();
+            if (shape != null) {
+                particlePreviewPanel.setCurrentShape(shape);
+            }
+        });
+
+        mixModeCheckBox.addItemListener(e -> {
+            boolean enabled = mixModeCheckBox.isSelected();
+            if (particleShapeComboBox != null) {
+                particleShapeComboBox.setEnabled(!enabled);
+            }
+            particlePreviewPanel.setEnableMixMode(enabled);
+        });
+
+        particleSizeSlider.addChangeListener(e -> {
+            JSlider source = (JSlider) e.getSource();
+            particlePreviewPanel.setParticleSize(source.getValue());
+        });
     }
 
     public void initSetting() {
@@ -124,6 +157,18 @@ public class SettingForm {
         } else {
             this.comboFont.setText(state.fontFileLocation);
         }
+
+        particleShapeComboBox.setModel(new DefaultComboBoxModel<>(ShapeRegistry.getAllShapes().toArray(new BaseParticleShape[0])));
+        BaseParticleShape shape = ShapeRegistry.getByShape(state.particleShape);
+        particleShapeComboBox.setSelectedItem(shape);
+
+        mixModeCheckBox.setSelected(state.shapeMixMode);
+        particleShapeComboBox.setEnabled(!state.shapeMixMode);
+
+        particlePreviewPanel.setCurrentShape(shape);
+        particlePreviewPanel.setParticleSize(state.particleSize);
+        particlePreviewPanel.setParticleColor(state.particleColor);
+        particlePreviewPanel.setEnableMixMode(state.shapeMixMode);
     }
 
     public JComponent getRootComponent() {
@@ -132,12 +177,23 @@ public class SettingForm {
 
     public boolean isModified() {
         try {
+            boolean shapeChanged = particleShapeComboBox != null &&
+                    !Comparing.equal(
+                            particleShapeComboBox.getSelectedItem() != null ? ((BaseParticleShape) particleShapeComboBox.getSelectedItem()).getShape() : Shape.CIRCLE,
+                            state.particleShape
+                    );
+
+            boolean mixModeChanged = mixModeCheckBox != null &&
+                    mixModeCheckBox.isSelected() != state.shapeMixMode;
+
             return !Comparing.equal(state.particleMaxCount, particleMaxCountSlider.getValue()) ||
                     !Comparing.equal(state.animationInterval, animationIntervalSlider.getValue()) ||
                     !Comparing.equal(state.particleSize, particleSizeSlider.getValue()) ||
                     !Comparing.strEqual(String.valueOf(state.effectBorder), activateBorder.getText()) ||
                     !Comparing.strEqual(state.fontFileLocation == null ? Config.DEFAULT : state.fontFileLocation, comboFont.getText()) ||
-                    !Comparing.equal(state.particleColor, colorAutoCheckBox.isSelected() ? null : colorChooser.getSelectedColor());
+                    !Comparing.equal(state.particleColor, colorAutoCheckBox.isSelected() ? null : colorChooser.getSelectedColor()) ||
+                    shapeChanged ||
+                    mixModeChanged;
         } catch (NumberFormatException e) {
             return true;
         }
@@ -181,11 +237,15 @@ public class SettingForm {
             ParticlePanel.getInstance().restartTask();
         }
 
-    }
+        // 保存粒子形状配置
+        BaseParticleShape selectedShape = (BaseParticleShape) particleShapeComboBox.getSelectedItem();
+        if (selectedShape != null) {
+            state.particleShape = selectedShape.getShape();
+        }
 
-    public void reset() {
-        Config.getInstance().defaultInitState();
-        initSetting();
+        // 保存混合模式配置
+        state.shapeMixMode = mixModeCheckBox.isSelected();
+
     }
 
 }
